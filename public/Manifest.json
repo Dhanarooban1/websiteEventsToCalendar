@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Dhana",
+  "version": "1.0.0",
+  "description": "A basic example extension with shortcut keys",
+  "permissions": ["scripting", "storage", "tabs", "activeTab", "contextMenus"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "commands": {
+    "open-extension": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+O",
+        "mac": "Command+Shift+O"
+      },
+      "description": "Open the extension popup"
+    },
+    "extract-data": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+X",
+        "mac": "Command+Shift+X"
+      },
+      "description": "Extract selected text"
+    },
+    "save-event": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Save the event"
+    }
+  }
+}
