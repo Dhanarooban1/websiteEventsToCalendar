@@ -11,7 +11,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         background: resolve(__dirname, './src/services/background.js'),
-        content: resolve(__dirname, './src/services/Content.js'),
+        content: resolve(__dirname, './src/services/content.js'),
       },
       output: {
         entryFileNames: '[name].js',
