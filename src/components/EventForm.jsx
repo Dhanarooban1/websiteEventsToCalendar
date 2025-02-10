@@ -1,5 +1,9 @@
   import { useState, useEffect } from "react";
   import { Link } from "lucide-react";
+  import { ClipLoader } from "react-spinners";
+
+
+  const googleColors = ["#4285F4", "#EA4335", "#FBBC05", "#34A853"];
 
   const convertDate = (dateStr) => {
     const d = new Date(dateStr);
@@ -28,8 +32,7 @@
     const [showPopup, setShowPopup] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
     const [isExtracting, setIsExtracting] = useState(false);
-
-
+    const [isSaveing,SetIsSaving] = useState(false);
 
 
     useEffect(() => {
@@ -70,7 +73,7 @@
             if (updatedData.date) {
               updatedData.date = convertDate(updatedData.date);
             }
-            // Merge Gemini’s data into our formData
+            
             setFormData((prev) => ({ ...prev, ...updatedData }));
           } catch (err) {
             console.error("Error updating formData from storage change:", err);
@@ -130,12 +133,13 @@
     };
 
     const handleSubmit = (e) => {
-      e.preventDefault();
-        console.log("Dhana");
-        clearStorage();
+      e.preventDefault();    
+      clearStorage();
+      SetIsSaving(true);
         setShowPopup(true);
         setTimeout(() => {
           setShowPopup(false);
+          SetIsSaving(false);
         }, 3000);
     }
 
@@ -306,7 +310,10 @@
                 className="px-6 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-colors duration-200"
                 disabled={isExtracting}
               >
-               {isExtracting ? "Extracting..." : "Extract Info"}
+               {isExtracting ? <>
+                Extracing... <ClipLoader color={googleColors[0]} size={20} /> 
+               </>
+                : "Extract Info"}
               </button>
             )}
             {currentStep < 3 ? (
@@ -322,8 +329,12 @@
                 type="button"
               onClick={handleSubmit} 
                 className="px-6 py-2.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200"
+                disabled={isSaveing}
               >
-                Save Event
+                 {isSaveing ? <>
+                 Saving...
+                  <ClipLoader color={googleColors[0]} size={20} />
+                 </>  : "Save to Calendar"}
               </button>
             )}
           </div>
