@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Web2Cal",
-  "version": "1.0.0",
+  "version": "1.0.0", 
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuUbwBj0QZag1BpjzfqHj3Y4wamsvExSE6qh2XSmj7q2GV2YPnIKwr3TWGJiVdtUKNBhLde8zy67h41w8WZjXrckHO1uo90CUxdIGvBPFcrqEquXQrLF/feEXjmSOQuy/FCkH65gFQiTa5CYbL7Hexe34Sot2thdR5rSSBN/PGny4x4tNbixf45lw9+bRu6HhWtVOV4M42nFXQPnjojvzPOERkzvikJgxqBNn2v9ruruiu8Rpaddve19Td/SIusoOQ92b4+QOkvmo9hLxYyEwaMKCsuqOgKswMn5UUyGhaMtHkivPc5ivcfj9aJqD/U6kYwgV+lFMArGEOI37blodIQIDAQAB",
   "description": "A basic example extension with shortcut keys",
-  "permissions": ["scripting", "storage", "tabs", "activeTab", "contextMenus"],
+  "permissions": ["scripting", "storage", "tabs", "activeTab", "contextMenus","identity","identity.email"
+],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "index.html"
@@ -17,6 +19,14 @@
       "js": ["content.js"]
     }
   ],
+  "oauth2": {
+    "client_id": "688093138143-339083b8oqc1tk84or0nafncr9be0qg0.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/calendar.events",
+      "https://www.googleapis.com/auth/calendar.events.readonly"
+    ]
+  },
   "commands": {
     "open-extension": {
       "suggested_key": {

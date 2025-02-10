@@ -1,7 +1,7 @@
   import { useState, useEffect } from "react";
   import { Link } from "lucide-react";
   import { ClipLoader } from "react-spinners";
-
+import { getGoogleAuthToken,createCalendarEvent } from "../services/oauth";
 
   const googleColors = ["#4285F4", "#EA4335", "#FBBC05", "#34A853"];
 
@@ -73,6 +73,17 @@
             if (updatedData.date) {
               updatedData.date = convertDate(updatedData.date);
             }
+
+            const allNull = Object.keys(updatedData).every(
+              (key) => updatedData[key] === null
+            );
+  
+            if (allNull) {
+              alert("No events from selected! Please select some text and try again.");
+              setIsExtracting(false);
+              return; // Stop further processing
+            }
+  
             
             setFormData((prev) => ({ ...prev, ...updatedData }));
           } catch (err) {
@@ -115,13 +126,32 @@
 
     const extractText = () => {
       setIsExtracting(true);
-      chrome.runtime.sendMessage({ action: "display-selected-text" }, (response) => {
-        if (!(response && response.success)) {
-          console.error("Extraction failed or no response:", response);
-          setIsExtracting(false);
-        }
+   
+      chrome.storage.local.remove("geminiExtractedData", () => {
+        chrome.runtime.sendMessage({ action: "display-selected-text" }, (response) => {
+          if (!(response && response.success)) {
+            console.error("Extraction failed or no response:", response);
+            setIsExtracting(false);
+          }
+        });
       });
     };
+
+
+    useEffect(() => {
+      const messageListener = (message, sender, sendResponse) => {
+        if (message.action === "extraction-Data") {
+          setIsExtracting(true);
+          console.log("Dhana");
+        }
+      };
+  
+      chrome.runtime.onMessage.addListener(messageListener);
+      return () => {
+        chrome.runtime.onMessage.removeListener(messageListener);
+      };
+    }, []);
+  
 
     const handleInputChange = (e) => {
       const { name, value } = e.target;
@@ -132,16 +162,32 @@
       }
     };
 
-    const handleSubmit = (e) => {
-      e.preventDefault();    
-      clearStorage();
+    const handleSubmit = async (e) => {
+      e.preventDefault();
       SetIsSaving(true);
+      
+      try {
+        // Validate required fields before submission
+        if (!formData.eventName || !formData.date || !formData.startTime || !formData.endTime) {
+          throw new Error('Please fill in all required fields (Event Name, Date, Start Time, and End Time)');
+        }
+    
+        const token = await getGoogleAuthToken();
+        await createCalendarEvent(token, formData);
+        
+        // Only clear storage after successful event creation
+        clearStorage();
         setShowPopup(true);
         setTimeout(() => {
           setShowPopup(false);
           SetIsSaving(false);
         }, 3000);
-    }
+      } catch (error) {
+        console.error('Failed to create event:', error);
+        alert(error.message || 'Failed to create event. Please try again.');
+        SetIsSaving(false);
+      }
+    };
 
 
 
@@ -345,6 +391,7 @@
             <p className="font-medium">Event saved successfully! ✨</p>
           </div>
         )}
+       
       </div>
     );
   }

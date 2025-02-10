@@ -7,13 +7,12 @@ chrome.commands.onCommand.addListener(async (command) => {
   if (command === "extract-data") {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab) return;
+    chrome.runtime.sendMessage({ action: "extraction-Data" });
     try {
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         function: displaySelectedText,
-        
       });
-     
     } catch (err) {
       console.error("Failed to execute script:", err);
     }
@@ -46,7 +45,7 @@ function executeDisplaySelectedText() {
       return;
     }
 
-    console.log("Found active tab:", activeTab);
+    
 
     // First, ensure the page is fully loaded
     chrome.scripting.executeScript({
@@ -99,6 +98,8 @@ function displaySelectedText() {
   });
 }
 
+
+// Commands displaytext -  process text - google gemini
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "processText") {
     executePrompt(message.text)
