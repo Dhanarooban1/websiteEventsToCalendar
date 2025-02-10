@@ -1,5 +1,39 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+
+chrome.commands.onCommand.addListener(async (command) => {
+
+  
+  if (command === "extract-data") {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) return;
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        function: displaySelectedText,
+        
+      });
+     
+    } catch (err) {
+      console.error("Failed to execute script:", err);
+    }
+  }
+  
+  if (command === "save-event") {
+  
+    chrome.storage.local.get(['geminiExtractedData'], (result) => {
+      if (result.geminiExtractedData) {
+       
+      } else {
+        console.error('No event data to save');
+      }
+    });
+  }
+});
+
+
+
+
 function executeDisplaySelectedText() {
   chrome.windows.getLastFocused({ populate: true }, (window) => {
     const activeTab = window.tabs.find(
@@ -40,6 +74,9 @@ function executeDisplaySelectedText() {
     });
   });
 }
+
+
+
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "display-selected-text") {
@@ -145,31 +182,3 @@ Rules:
   return await getGeminiResponse(prompt);
 }
 
-chrome.commands.onCommand.addListener(async (command) => {
-
-  
-  if (command === "extract-data") {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab) return;
-
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        function: displaySelectedText
-      });
-    } catch (err) {
-      console.error("Failed to execute script:", err);
-    }
-  }
-  
-  if (command === "save-event") {
-  
-    chrome.storage.local.get(['geminiExtractedData'], (result) => {
-      if (result.geminiExtractedData) {
-       
-      } else {
-        console.error('No event data to save');
-      }
-    });
-  }
-});

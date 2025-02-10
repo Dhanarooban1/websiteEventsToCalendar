@@ -1,5 +1,6 @@
   import { useState, useEffect } from "react";
   import { Link } from "lucide-react";
+
   const convertDate = (dateStr) => {
     const d = new Date(dateStr);
     if (isNaN(d)) return "";
@@ -23,49 +24,72 @@
       notification: "30",
       color: "#0A84FF" // Updated to Apple's system blue
     });
+
     const [showPopup, setShowPopup] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
+    const [isExtracting, setIsExtracting] = useState(false);
 
+
+
+
+    useEffect(() => {
+    chrome.storage.local.get("userFormData", (userData) => {
+      if (userData.userFormData) {
+        try {
+          const parsedUserData = JSON.parse(userData.userFormData);
+          if (parsedUserData.date) {
+            parsedUserData.date = convertDate(parsedUserData.date);
+          }
+          setFormData(parsedUserData);
+        } catch (err) {
+          console.error("Error parsing userFormData:", err);
+        }
+      }
+    });
+  }, []);
     
-    const ExtractDataFromGoogle= () => {
-      chrome.storage.local.get("geminiExtractedData", (data) => {
-        console.log("geminiExtractedDataG",data.geminiExtractedData)
-        if (data.geminiExtractedData) {
+
+  
+  
+  useEffect(() => {
+    chrome.storage.local.set({ userFormData: JSON.stringify(formData) });
+  }, [formData]);
+
+
+
+
+  // IMPORTANT: Listen for changes to geminiExtractedData so that as soon as the background
+  // writes new data, the UI is updated.
+  useEffect(() => {
+    const handleStorageChange = (changes, areaName) => {
+      if (areaName === "local" && changes.geminiExtractedData) {
+        const newData = changes.geminiExtractedData.newValue;
+        if (newData) {
           try {
-            const parsedGeminiData = data.geminiExtractedData;
-            if (parsedGeminiData.date) {
-              parsedGeminiData.date = convertDate(parsedGeminiData.date);
+            const updatedData = { ...newData };
+            if (updatedData.date) {
+              updatedData.date = convertDate(updatedData.date);
             }
-            setFormData(parsedGeminiData);
+            // Merge Gemini’s data into our formData
+            setFormData((prev) => ({ ...prev, ...updatedData }));
           } catch (err) {
-            console.error("Error parsing geminiExtractedData:", err);
+            console.error("Error updating formData from storage change:", err);
+          } finally {
+            setIsExtracting(false);
           }
         }
-      });
-    }
+      }
+    };
+
+    chrome.storage.onChanged.addListener(handleStorageChange);
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, []);
+
 
   
 
-    useEffect(() => {
-      chrome.storage.local.get("userFormData", (userData) => {
-        if (userData.userFormData) {
-          try {
-            const parsedUserData = JSON.parse(userData.userFormData);
-            if (parsedUserData.date) {
-              parsedUserData.date = convertDate(parsedUserData.date);
-            }
-            setFormData(parsedUserData);
-          } catch (err) {
-            console.error("Error parsing userFormData:", err);
-          }
-        }
-      });
-    }, []);
-
-
-    useEffect(() => {
-      chrome.storage.local.set({ userFormData: JSON.stringify(formData) });
-    }, [formData]);
 
   //it remove the both data in local storage 
     const clearStorage = () => {
@@ -87,16 +111,14 @@
     };
 
     const extractText = () => {
+      setIsExtracting(true);
       chrome.runtime.sendMessage({ action: "display-selected-text" }, (response) => {
-        if (response && response.success) {
-          setTimeout(() => {
-            ExtractDataFromGoogle();
-          }, 500);
-        } else {
+        if (!(response && response.success)) {
           console.error("Extraction failed or no response:", response);
+          setIsExtracting(false);
         }
       });
-    }
+    };
 
     const handleInputChange = (e) => {
       const { name, value } = e.target;
@@ -116,6 +138,7 @@
           setShowPopup(false);
         }, 3000);
     }
+
 
 
     const renderStep = () => {
@@ -281,8 +304,9 @@
                 type="button"
                 onClick={extractText}
                 className="px-6 py-2.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-colors duration-200"
+                disabled={isExtracting}
               >
-                Extract Info
+               {isExtracting ? "Extracting..." : "Extract Info"}
               </button>
             )}
             {currentStep < 3 ? (
