@@ -26,7 +26,7 @@ import { getGoogleAuthToken,createCalendarEvent } from "../services/oauth";
       tags: [],
       priority: "medium",
       notification: "30",
-      color: "#0A84FF" // Updated to Apple's system blue
+      color: "#0A84FF" 
     });
 
     const [showPopup, setShowPopup] = useState(false);
@@ -61,8 +61,6 @@ import { getGoogleAuthToken,createCalendarEvent } from "../services/oauth";
 
 
 
-  // IMPORTANT: Listen for changes to geminiExtractedData so that as soon as the background
-  // writes new data, the UI is updated.
   useEffect(() => {
     const handleStorageChange = (changes, areaName) => {
       if (areaName === "local" && changes.geminiExtractedData) {

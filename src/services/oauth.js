@@ -13,14 +13,12 @@ export const getGoogleAuthToken = () => {
 
   
   export const createCalendarEvent = async (token, eventData) => {
-    // Input validation
     if (!eventData.date || !eventData.startTime || !eventData.endTime) {
       throw new Error('Missing required date/time information');
     }
   
-    // Format date and time properly
     const formatDateTime = (date, time) => {
-      // Remove any existing timezone info from the date
+      
       const cleanDate = date.split('T')[0];
       // Ensure time has seconds
       const cleanTime = time.includes(':') ? 

@@ -99,17 +99,13 @@ function displaySelectedText() {
 }
 
 
-// Commands displaytext -  process text - google gemini
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "processText") {
     executePrompt(message.text)
       .then((responseText) => {
         console.log("Gemini Response:", responseText);
-
         try {
           let parsedResponse = JSON.parse(responseText);
-
-          // Ensure all required keys exist
           const eventDetails = {
             eventName: parsedResponse.eventName || null,
             description: parsedResponse.description || null,
@@ -142,7 +138,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function executePrompt(text) {
   const prompt = `Extract event details from the provided text: "${text}". 
 Return only a JSON object exactly in the following format without any additional text or explanation:
-
 {
   "eventName": "<event name or null>",
   "description": "<description or null>",
@@ -152,7 +147,6 @@ Return only a JSON object exactly in the following format without any additional
   "location": "<location or null>",
   "virtualLink": "<virtual link or null>"
 }
-
 Rules:
 - If any piece of information is missing, set its value to null.
 - Do not include any extra text, comments, or markdown formatting.
@@ -161,16 +155,13 @@ Rules:
   async function getGeminiResponse(content) {
     const API_KEY = "AIzaSyCIPzkqueMwaIJoHAlYh1XNpHTXoT6l02A";
     const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     try {
       const result = await model.generateContent(content);
       let responseText = await result.response.text();
-
-      // Extract JSON using regex to remove extra text
       const jsonMatch = responseText.match(/\{[\s\S]*?\}/);
       if (jsonMatch) {
-        return jsonMatch[0]; // Return clean JSON
+        return jsonMatch[0]; 
       } else {
         throw new Error("Response did not contain valid JSON.");
       }
