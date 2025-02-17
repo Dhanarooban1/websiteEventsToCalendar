@@ -132,24 +132,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 
 async function executePrompt(text) {
-  const prompt = `Extract event details from the provided text: "${text}". 
-Return only a JSON object exactly in the following format without any additional text or explanation:
-{
-  "eventName": "<event name or null>",
-  "description": "<description or null>",
-  "date": "<YYYY-MM-DD or null>",
-  "startTime": "<HH:mm or null>",
-  "endTime": "<HH:mm or null>",
-  "location": "<location or null>",
-  "virtualLink": "<virtual link or null>"
-}
-Rules:
-- Convert time to 24-hour format (HH:mm). Example: "3 PM" → "15:00".
-- If the text contains a time range extract both startTime and endTime.
-- If any piece of information is missing, set its value to null.
-- Do not include any extra text, comments, or markdown formatting.
-- If no event-related information is found, return all values as null.
-`;
+const prompt = `Extract event details from the provided text: "${text}".  
+Return only a JSON object exactly in the following format without any additional text, explanation, or formatting like markdown or code blocks:  
+
+{  
+  "eventName": "<event name or null>",  
+  "description": "<description or null>",  
+  "date": "<YYYY-MM-DD or null>",  
+  "startTime": "<HH:mm or null>",  
+  "endTime": "<HH:mm or null>",  
+  "location": "<location or null>",  
+  "virtualLink": "<virtual link or null>"  
+}  
+
+Rules:  
+- Convert time to 24-hour format (HH:mm). Example: "3 PM" → "15:00".  
+- If the text contains a time range, extract both startTime and endTime.  
+- If any piece of information is missing, set its value to null.  
+- Do not include any extra text, comments, code block formatting (e.g., triple backticks), or markdown syntax.  
+- If no event-related information is found, return all values as null.  
+- Ensure the response is a pure JSON object, not wrapped in an array
+`
 
 async function getGeminiResponse(content) {
   return new Promise((resolve, reject) => {
@@ -164,7 +167,7 @@ async function getGeminiResponse(content) {
 
       try {
         const GoogleData = await model.generateContent(content);
-        let responseText = await GoogleData.response.text();
+        let responseText = GoogleData.response.text();
         const jsonMatch = responseText.match(/\{[\s\S]*?\}/);
         if (jsonMatch) {
           resolve(jsonMatch[0]);

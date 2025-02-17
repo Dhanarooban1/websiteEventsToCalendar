@@ -73,9 +73,9 @@ export default function EventForm() {
 
   useEffect(() => {
     const handleStorageChange = (changes, areaName) => {
-      if (areaName === "local" && changes.geminiExtractedData) {
+      if (areaName === "sync" && changes.geminiExtractedData) {
         const newData = changes.geminiExtractedData.newValue;
-      
+      console.log(newData);
         if (newData) {
           try {
             const updatedData = { ...newData };
