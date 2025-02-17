@@ -20,7 +20,6 @@ export const getGoogleAuthToken = () => {
     const formatDateTime = (date, time) => {
       
       const cleanDate = date.split('T')[0];
-      // Ensure time has seconds
       const cleanTime = time.includes(':') ? 
         (time.split(':').length === 2 ? `${time}:00` : time) : 
         `${time}:00:00`;

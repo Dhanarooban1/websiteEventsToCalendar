@@ -47,7 +47,6 @@ function executeDisplaySelectedText() {
 
     
 
-    // First, ensure the page is fully loaded
     chrome.scripting.executeScript({
       target: { tabId: activeTab.id },
       function: () =>
@@ -59,7 +58,7 @@ function executeDisplaySelectedText() {
           }
         }),
     }, () => {
-      // Now, run your displaySelectedText function on the active tab
+      
       chrome.scripting.executeScript({
         target: { tabId: activeTab.id },
         function: displaySelectedText,
@@ -130,10 +129,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: false, error: error.message });
       });
 
-    return true; // Required for asynchronous sendResponse
+    return true; 
   }
   return false;
 });
+
 
 async function executePrompt(text) {
   const prompt = `Extract event details from the provided text: "${text}". 
@@ -141,36 +141,50 @@ Return only a JSON object exactly in the following format without any additional
 {
   "eventName": "<event name or null>",
   "description": "<description or null>",
-  "date": "<date or null>",
-  "startTime": "<start time or null>",
-  "endTime": "<end time or null>",
+  "date": "<YYYY-MM-DD or null>",
+  "startTime": "<HH:mm or null>",
+  "endTime": "<HH:mm or null>",
   "location": "<location or null>",
   "virtualLink": "<virtual link or null>"
 }
 Rules:
+- Convert time to 24-hour format (HH:mm). Example: "3 PM" → "15:00".
+- If the text contains a time range extract both startTime and endTime.
 - If any piece of information is missing, set its value to null.
 - Do not include any extra text, comments, or markdown formatting.
-- Even if the text does not contain any event-related information, return the JSON with all values set to null.`;
+- If no event-related information is found, return all values as null.
+`;
 
-  async function getGeminiResponse(content) {
-    const API_KEY = "AIzaSyCIPzkqueMwaIJoHAlYh1XNpHTXoT6l02A";
-    const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    try {
-      const result = await model.generateContent(content);
-      let responseText = await result.response.text();
-      const jsonMatch = responseText.match(/\{[\s\S]*?\}/);
-      if (jsonMatch) {
-        return jsonMatch[0]; 
-      } else {
-        throw new Error("Response did not contain valid JSON.");
+async function getGeminiResponse(content) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(["userAPIKey"], async (result) => {
+      const API_KEY = result.userAPIKey || "";
+      if (!API_KEY) {
+        return reject("No API key found. Please set your API key.");
       }
-    } catch (error) {
-      console.error("Error generating response:", error);
-      return JSON.stringify({ error: "Failed to extract JSON" });
-    }
-  }
+
+      const genAI = new GoogleGenerativeAI(API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      try {
+        const result = await model.generateContent(content);
+        let responseText = await result.response.text();
+        const jsonMatch = responseText.match(/\{[\s\S]*?\}/);
+        if (jsonMatch) {
+          resolve(jsonMatch[0]);
+        } else {
+          reject("Response did not contain valid JSON.");
+        }
+      } catch (error) {
+        reject("Error generating response: " + error.message);
+      }
+    });
+  });
+}
+
 
   return await getGeminiResponse(prompt);
 }
+
+
 
