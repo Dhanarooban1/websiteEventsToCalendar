@@ -42,11 +42,15 @@ export default function EventForm() {
 
   // Set data on  first extension load from userFromData 
   useEffect(() => {
-    chrome.storage.local.get("userFormData", (userData) => {
-      if (userData.userFormData) {
-        console.log("from userformdata", userData.userFormData)
+    chrome.storage.sync.get("userFormData", (result) => {
+        if (chrome.runtime.lastError) {
+            console.error("Error retrieving userFormData: ", chrome.runtime.lastError);
+            return; // Exit if there's an error
+        }
+
+      if (result && result.userFormData) { // check for result  before accessing the data
         try {
-          const parsedUserData = JSON.parse(userData.userFormData);
+          const parsedUserData = JSON.parse(result.userFormData);
           if (parsedUserData.date) {
             parsedUserData.date = convertDate(parsedUserData.date);
           }
@@ -59,10 +63,9 @@ export default function EventForm() {
   }, []);
 
 
-
   // Set data on formdata change
   useEffect(() => {
-    chrome.storage.local.set({ userFormData: JSON.stringify(formData) });
+    chrome.storage.sync.set({ userFormData: JSON.stringify(formData) });
   }, [formData]);
 
 
@@ -72,7 +75,7 @@ export default function EventForm() {
     const handleStorageChange = (changes, areaName) => {
       if (areaName === "local" && changes.geminiExtractedData) {
         const newData = changes.geminiExtractedData.newValue;
-        console.log("from newdata", newData)
+      
         if (newData) {
           try {
             const updatedData = { ...newData };
@@ -100,7 +103,6 @@ export default function EventForm() {
         }
       }
     };
-
     chrome.storage.onChanged.addListener(handleStorageChange);
     return () => {
       chrome.storage.onChanged.removeListener(handleStorageChange);
@@ -113,7 +115,7 @@ export default function EventForm() {
 
 
   const clearStorage = () => {
-    chrome.storage.local.remove(["userFormData", "geminiExtractedData"], () => {
+    chrome.storage.sync.remove(["userFormData", "geminiExtractedData"], () => {
       setFormData({
         eventName: "",
         description: "",
@@ -132,7 +134,7 @@ export default function EventForm() {
 
   const extractText = () => {
     setIsExtracting(true);
-    chrome.storage.local.remove("geminiExtractedData", () => {
+    chrome.storage.sync.remove("geminiExtractedData", () => {
       chrome.runtime.sendMessage({ action: "display-selected-text" }, (response) => {
         if (!(response && response.success)) {
           console.error("Extraction failed or no response:", response);

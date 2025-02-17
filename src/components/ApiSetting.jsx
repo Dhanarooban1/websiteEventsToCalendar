@@ -8,7 +8,7 @@ const APISettings = ({ onValidated }) => {
 
   useEffect(() => {
    
-    chrome.storage.local.get(['userAPIKey'], (result) => {
+    chrome.storage.sync.get(['userAPIKey'], (result) => {
       if (result.userAPIKey) {
         setApiKey(result.userAPIKey);
         onValidated(true);
@@ -25,7 +25,7 @@ const APISettings = ({ onValidated }) => {
     }
 
     try {
-      await chrome.storage.local.set({ userAPIKey: apiKey.trim() });
+      await chrome.storage.sync.set({ userAPIKey: apiKey.trim() });
       onValidated(true);
       setShowSettings(false);
       setError('');

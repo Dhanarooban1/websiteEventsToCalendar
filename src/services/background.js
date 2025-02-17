@@ -1,9 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
-chrome.commands.onCommand.addListener(async (command) => {
-
-  
+chrome.commands.onCommand.addListener(async (command) => {  
   if (command === "extract-data") {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab) return;
@@ -17,12 +15,11 @@ chrome.commands.onCommand.addListener(async (command) => {
       console.error("Failed to execute script:", err);
     }
   }
-  
+
   if (command === "save-event") {
-  
-    chrome.storage.local.get(['geminiExtractedData'], (result) => {
+    chrome.storage.sync.get(['geminiExtractedData'], (result) => {
       if (result.geminiExtractedData) {
-       
+        chrome.runtime.sendMessage({ action: "Save-Data" });
       } else {
         console.error('No event data to save');
       }
@@ -102,7 +99,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "processText") {
     executePrompt(message.text)
       .then((responseText) => {
-        console.log("Gemini Response:", responseText);
         try {
           let parsedResponse = JSON.parse(responseText);
           const eventDetails = {
@@ -115,7 +111,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             virtualLink: parsedResponse.virtualLink || null
           };
 
-          chrome.storage.local.set({ geminiExtractedData: eventDetails }, () => {
+          chrome.storage.sync.set({ geminiExtractedData: eventDetails }, () => {
             sendResponse({ success: true, responseText: eventDetails });
           });
 
@@ -157,7 +153,7 @@ Rules:
 
 async function getGeminiResponse(content) {
   return new Promise((resolve, reject) => {
-    chrome.storage.local.get(["userAPIKey"], async (result) => {
+    chrome.storage.sync.get(["userAPIKey"], async (result) => {
       const API_KEY = result.userAPIKey || "";
       if (!API_KEY) {
         return reject("No API key found. Please set your API key.");
@@ -167,8 +163,8 @@ async function getGeminiResponse(content) {
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
       try {
-        const result = await model.generateContent(content);
-        let responseText = await result.response.text();
+        const GoogleData = await model.generateContent(content);
+        let responseText = await GoogleData.response.text();
         const jsonMatch = responseText.match(/\{[\s\S]*?\}/);
         if (jsonMatch) {
           resolve(jsonMatch[0]);
