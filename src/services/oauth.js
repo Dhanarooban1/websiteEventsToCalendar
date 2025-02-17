@@ -10,7 +10,23 @@ export const getGoogleAuthToken = () => {
     });
   };
   
+const getGoogleColorId = (hexColor) => {
+  const colorMap = {
+    '#4285F4': '1',  
+    '#EA4335': '11', // Red
+    '#FBBC05': '5',  // Yellow
+    '#34A853': '2',  // Green
+    '#8E24AA': '3',  // Purple
+    '#FF6D00': '6',  // Orange
+    '#00BCD4': '7',  // Cyan/Turquoise
+    '#607D8B': '8',  // Blue Grey
+    '#FF4081': '4',  // Pink
+    '#1DE9B6': '2',  // Teal (using Green)
+  };
 
+  // Find closest color or default to blue (1)
+  return colorMap[hexColor] || '1';
+};
   
   export const createCalendarEvent = async (token, eventData) => {
     if (!eventData.date || !eventData.startTime || !eventData.endTime) {
@@ -53,7 +69,8 @@ export const getGoogleAuthToken = () => {
             minutes: parseInt(eventData.notification) || 30 
           }
         ]
-      }
+      },
+      colorId: getGoogleColorId(eventData.color)
     };
   
     try {
