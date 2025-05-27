@@ -1,6 +1,7 @@
 # 📅 Automated Calendar Integration System
 
 An intelligent browser extension that seamlessly extracts event information from web pages and automatically adds them to your Google Calendar. Say goodbye to manual event creation and never miss important events again!
+
 Video - https://drive.google.com/file/d/1grYg2Jgku8il5WaZ0QirM_fCc6igj2K8/view
 
 ## ✨ Features
